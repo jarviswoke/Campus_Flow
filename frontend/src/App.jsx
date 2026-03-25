@@ -8,6 +8,7 @@ import VacantRooms from './components/student/VacantRooms';
 import Profile from './components/student/Profile';
 import SuccessModal from './components/student/SuccessModal';
 import CompliantStatus from './components/student/ComplaintStatus';
+import FacultyDashboard from './components/faculty/FacultyDashboard';
 
 
 const App = () => {
@@ -22,6 +23,8 @@ const App = () => {
     <Route path='/status' element= {<CompliantStatus  /> }/>
     <Route path='/success' element= {<SuccessModal  /> }/>
     
+
+    <Route path="/faculty" element={<FacultyDashboard /> }/>
 
 </Routes> </div>
   )
