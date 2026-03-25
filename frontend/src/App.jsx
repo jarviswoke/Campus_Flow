@@ -21,6 +21,7 @@ const App = () => {
     <Route path='/profile' element= {<Profile  /> }/>
     <Route path='/status' element= {<CompliantStatus  /> }/>
     <Route path='/success' element= {<SuccessModal  /> }/>
+    
 
 </Routes> </div>
   )
