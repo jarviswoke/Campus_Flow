@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Users, ClipboardList, DoorOpen, BarChart3 } from 'lucide-react';
 
 const COMPLAINT_TRENDS = [

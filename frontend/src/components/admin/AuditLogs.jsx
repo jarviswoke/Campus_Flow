@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Search, Download, Activity, CheckCircle, AlertCircle, Edit, Trash2, Shield, FileText, User } from 'lucide-react';
 
 const AUDIT_LOGS = [
