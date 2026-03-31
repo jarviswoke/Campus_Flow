@@ -1,4 +1,5 @@
 import { LayoutDashboard, ClipboardList, CalendarDays, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -7,6 +8,13 @@ const NAV_ITEMS = [
 ];
 
 export default function FacultyNavigation({ activeTab = 'dashboard', onNavigate }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-indigo-700 border-b border-indigo-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
@@ -40,7 +48,7 @@ export default function FacultyNavigation({ activeTab = 'dashboard', onNavigate 
           })}
         </div>
 
-        {/* User */}
+        {/* User + Logout */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="hidden sm:block text-right">
             <p className="text-sm font-semibold text-white leading-tight">Dr. Sarah Johnson</p>
@@ -49,6 +57,16 @@ export default function FacultyNavigation({ activeTab = 'dashboard', onNavigate 
           <div className="w-9 h-9 rounded-full bg-white/20 border border-indigo-300 flex items-center justify-center text-white text-sm font-bold">
             SJ
           </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            title="Logout"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-indigo-100 hover:bg-white/10 hover:text-white transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden md:inline">Logout</span>
+          </button>
         </div>
       </div>
     </nav>
