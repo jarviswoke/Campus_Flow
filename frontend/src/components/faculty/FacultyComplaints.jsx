@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Search, CheckCircle, Clock, AlertCircle, MessageSquare, MapPin, User, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 

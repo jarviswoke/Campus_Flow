@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ClipboardList, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const STATS = [
   { label: 'Total Complaints', value: '47', change: '+8 this week', icon: ClipboardList, color: 'blue' },
@@ -30,7 +31,9 @@ const colorMap = {
 
 const priorityCls = { high: 'bg-red-50 text-red-700 border-red-200', medium: 'bg-amber-50 text-amber-700 border-amber-200' };
 
-export default function FacultyDashboard({ onNavigate }) {
+export default function FacultyDashboard({  }) {
+  const navigate=useNavigate();
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -38,7 +41,7 @@ export default function FacultyDashboard({ onNavigate }) {
           <h1 className="text-2xl font-bold text-slate-900">Faculty Dashboard</h1>
           <p className="text-slate-500 text-sm mt-0.5">Welcome back, Dr. Sarah Johnson</p>
         </div>
-        <button onClick={() => onNavigate('complaints')}
+        <button onClick={() => navigate('/complaints')}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
           <ClipboardList className="w-4 h-4" /> View All Complaints
         </button>
@@ -68,7 +71,7 @@ export default function FacultyDashboard({ onNavigate }) {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-slate-900">Urgent Complaints</h2>
-            <button onClick={() => onNavigate('complaints')}
+            <button onClick={() => navigate('/faculty/complaints')}
               className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700">
               View all <ArrowRight className="w-3 h-3" />
             </button>

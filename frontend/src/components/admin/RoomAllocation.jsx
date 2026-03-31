@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Search, DoorOpen, Users, CheckCircle, Clock, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 

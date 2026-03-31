@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Users, ClipboardList, DoorOpen, Activity, ArrowRight, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
 
 const STATS = [
