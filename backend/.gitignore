@@ -1,0 +1,43 @@
+# Environment Variables - NEVER COMMIT THIS!
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Migrations (optional - commit if using Flask-Migrate)
+# migrations/   
