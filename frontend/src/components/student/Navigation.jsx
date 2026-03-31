@@ -1,4 +1,4 @@
-import { Home, DoorOpen, MessageSquare, List, User } from 'lucide-react';
+import { Home, DoorOpen, MessageSquare, List, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const NAV_ITEMS = [
@@ -10,7 +10,13 @@ const NAV_ITEMS = [
 ];
 
 export default function Navigation({ activeTab = 'dashboard' }) {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
@@ -49,7 +55,7 @@ export default function Navigation({ activeTab = 'dashboard' }) {
           })}
         </div>
 
-        {/* User chip */}
+        {/* User chip + Logout */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="hidden sm:block text-right">
             <p className="text-sm font-semibold text-slate-900 leading-tight">Suhani Kabra</p>
@@ -58,6 +64,16 @@ export default function Navigation({ activeTab = 'dashboard' }) {
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-sm font-bold shadow">
             SK
           </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            title="Logout"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-150"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden md:inline">Logout</span>
+          </button>
         </div>
       </div>
     </nav>
