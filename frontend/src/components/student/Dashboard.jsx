@@ -90,35 +90,6 @@ export default function Dashboard({ }) {
         })}
       </div>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Register Complaint', icon: MessageSquare, page: 'complaint', color: 'blue' },
-          { label: 'Vacant Rooms', icon: DoorOpen, page: 'rooms', color: 'green' },
-          { label: 'My Complaints', icon: CheckCircle, page: 'status', color: 'amber' },
-          { label: 'My Profile', icon: Bell, page: 'profile', color: 'purple' },
-        ].map((q) => {
-          const Icon = q.icon;
-          return (
-            <button
-              key={q.label}
-              onClick={() => onNavigate(q.page)}
-              className="bg-white border border-slate-100 rounded-xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group"
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                q.color === 'blue' ? 'bg-blue-50 text-blue-600' :
-                q.color === 'green' ? 'bg-emerald-50 text-emerald-600' :
-                q.color === 'amber' ? 'bg-amber-50 text-amber-600' :
-                'bg-purple-50 text-purple-600'
-              }`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{q.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Bottom two-col */}
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Recent complaints */}
