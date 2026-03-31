@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useContext } from 'react';
 import {useNavigate} from 'react-router-dom';
+import Dashboard from '../components/student/Dashboard';
+
 const LoginPage = () => {
   const Navigate=useNavigate();
-//const {loginUser}=useContext(AuthContext);
 
 const[currState, setcurrState]=useState("Sign Up")
   const[name, setName]=useState("");
@@ -29,7 +30,7 @@ const handleAuth = async () => {
 
       if (data.success) {
         loginUser(data.userData, data.token);
-        //Navigate("/upload"); // redirect after login/signup
+        //Navigate("/dashboard"); // redirect after login/signup
       } else {
         alert(data.message);
 }
@@ -55,7 +56,7 @@ const handleAuth = async () => {
         </div>
 
         <div className="flex gap-6 items-center ">
-     <button onClick={()=>Navigate("/")}
+     <button onClick={()=>Navigate("/dashboard")}
             className="bg-violet-600 text-white-500 rounded-md px-4 py-2 hover:bg-violet-500 cursor-pointer transition border-rounded">Home</button>
 
         </div>
