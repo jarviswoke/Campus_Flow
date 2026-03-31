@@ -76,7 +76,7 @@ export default function Profile() {
           </h2>
           <div className="space-y-3">
             {[
-              { icon: Mail, label: 'Email', value: 'john.doe@university.edu' },
+              { icon: Mail, label: 'Email', value: 'suhani@gmail.com' },
               { icon: Phone, label: 'Phone', value: '+91 98765 43210' },
               { icon: MapPin, label: 'Address', value: 'Hostel Block A, Room 205' },
               { icon: Calendar, label: 'Date of Birth', value: 'March 15, 2003' },
