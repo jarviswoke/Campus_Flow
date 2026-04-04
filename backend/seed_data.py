@@ -8,6 +8,9 @@ def seed_database():
     with app.app_context():
         print("Seeding database...")
         
+        # Ensure tables exist before seeding
+        db.create_all()
+        
         # Clear existing data (optional)
         # db.drop_all()
         # db.create_all()

@@ -1,54 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, CheckCircle, Clock, AlertCircle, XCircle,
   MapPin, User, FileText, ChevronDown, ChevronUp, Calendar,
 } from 'lucide-react';
 
-const COMPLAINTS = [
-  {
-    id: 'CMP024591234', title: 'Air Conditioner not working in Room 205',
-    category: 'Hostel', location: 'Hostel Block A - Room 205',
-    description: 'The AC unit has stopped cooling. Room temperature is very high.',
-    status: 'in-progress', priority: 'high',
-    submittedDate: 'Jan 24, 2026 11:30 AM', lastUpdated: 'Jan 24, 2026 2:15 PM',
-    assignedTo: 'Maintenance Team A', estimatedResolution: 'Jan 25, 2026',
-    timeline: [
-      { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 24, 11:30 AM', completed: true },
-      { stage: 'Acknowledged', description: 'Assigned to maintenance team', date: 'Jan 24, 12:00 PM', completed: true },
-      { stage: 'In Progress', description: 'Technician dispatched', date: 'Jan 24, 2:15 PM', completed: true },
-      { stage: 'Resolution', description: 'Awaiting completion', date: 'Pending', completed: false },
-    ],
-  },
-  {
-    id: 'CMP024589012', title: 'Broken chair in Classroom 101',
-    category: 'Classroom', location: 'Main Building - Room 101',
-    description: 'One of the chairs has a broken leg and is unsafe to use.',
-    status: 'resolved', priority: 'medium',
-    submittedDate: 'Jan 23, 2026 9:00 AM', lastUpdated: 'Jan 23, 2026 4:30 PM',
-    assignedTo: 'Furniture Maintenance',
-    timeline: [
-      { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 23, 9:00 AM', completed: true },
-      { stage: 'Acknowledged', description: 'Verified by admin', date: 'Jan 23, 9:30 AM', completed: true },
-      { stage: 'In Progress', description: 'Replacement ordered', date: 'Jan 23, 10:00 AM', completed: true },
-      { stage: 'Resolved', description: 'Chair replaced', date: 'Jan 23, 4:30 PM', completed: true },
-    ],
-  },
-  {
-    id: 'CMP024587890', title: 'WiFi connectivity issue in Computer Lab',
-    category: 'IT', location: 'Computer Lab 1 - IT Wing',
-    description: 'Intermittent WiFi disconnections affecting multiple workstations.',
-    status: 'pending', priority: 'high',
-    submittedDate: 'Jan 22, 2026 3:00 PM', lastUpdated: 'Jan 22, 2026 3:00 PM',
-    assignedTo: 'Not Assigned',
-    timeline: [
-      { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 22, 3:00 PM', completed: true },
-      { stage: 'Acknowledged', description: 'Pending review', date: 'Pending', completed: false },
-      { stage: 'In Progress', description: '', date: '', completed: false },
-      { stage: 'Resolution', description: '', date: '', completed: false },
-    ],
-  },
-];
+// const COMPLAINTS = [
+//   {
+//     id: 'CMP024591234', title: 'Air Conditioner not working in Room 205',
+//     category: 'Hostel', location: 'Hostel Block A - Room 205',
+//     description: 'The AC unit has stopped cooling. Room temperature is very high.',
+//     status: 'in-progress', priority: 'high',
+//     submittedDate: 'Jan 24, 2026 11:30 AM', lastUpdated: 'Jan 24, 2026 2:15 PM',
+//     assignedTo: 'Maintenance Team A', estimatedResolution: 'Jan 25, 2026',
+//     timeline: [
+//       { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 24, 11:30 AM', completed: true },
+//       { stage: 'Acknowledged', description: 'Assigned to maintenance team', date: 'Jan 24, 12:00 PM', completed: true },
+//       { stage: 'In Progress', description: 'Technician dispatched', date: 'Jan 24, 2:15 PM', completed: true },
+//       { stage: 'Resolution', description: 'Awaiting completion', date: 'Pending', completed: false },
+//     ],
+//   },
+//   {
+//     id: 'CMP024589012', title: 'Broken chair in Classroom 101',
+//     category: 'Classroom', location: 'Main Building - Room 101',
+//     description: 'One of the chairs has a broken leg and is unsafe to use.',
+//     status: 'resolved', priority: 'medium',
+//     submittedDate: 'Jan 23, 2026 9:00 AM', lastUpdated: 'Jan 23, 2026 4:30 PM',
+//     assignedTo: 'Furniture Maintenance',
+//     timeline: [
+//       { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 23, 9:00 AM', completed: true },
+//       { stage: 'Acknowledged', description: 'Verified by admin', date: 'Jan 23, 9:30 AM', completed: true },
+//       { stage: 'In Progress', description: 'Replacement ordered', date: 'Jan 23, 10:00 AM', completed: true },
+//       { stage: 'Resolved', description: 'Chair replaced', date: 'Jan 23, 4:30 PM', completed: true },
+//     ],
+//   },
+//   {
+//     id: 'CMP024587890', title: 'WiFi connectivity issue in Computer Lab',
+//     category: 'IT', location: 'Computer Lab 1 - IT Wing',
+//     description: 'Intermittent WiFi disconnections affecting multiple workstations.',
+//     status: 'pending', priority: 'high',
+//     submittedDate: 'Jan 22, 2026 3:00 PM', lastUpdated: 'Jan 22, 2026 3:00 PM',
+//     assignedTo: 'Not Assigned',
+//     timeline: [
+//       { stage: 'Submitted', description: 'Complaint registered', date: 'Jan 22, 3:00 PM', completed: true },
+//       { stage: 'Acknowledged', description: 'Pending review', date: 'Pending', completed: false },
+//       { stage: 'In Progress', description: '', date: '', completed: false },
+//       { stage: 'Resolution', description: '', date: '', completed: false },
+//     ],
+//   },
+// ];
 
 const statusConfig = {
   'in-progress': { label: 'In Progress', icon: Clock, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -63,16 +63,106 @@ const priorityCls = {
   low: 'bg-slate-50 text-slate-600 border-slate-200',
 };
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
 export default function ComplaintStatus() {
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [expanded, setExpanded] = useState(null);
 
-  const filtered = COMPLAINTS.filter((c) => {
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Please login to view complaints');
+          return;
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Failed to fetch complaints');
+          return;
+        }
+
+        const transformed = (data.complaints || []).map((complaint) => ({
+          id: complaint.complaint_id,
+          title: complaint.title,
+          category: complaint.category,
+          location: complaint.category,
+          description: complaint.description,
+          status: complaint.status === 'open' ? 'pending' : complaint.status,
+          priority: complaint.priority || 'medium',
+          submittedDate: complaint.created_at ? new Date(complaint.created_at).toLocaleString() : 'Unknown',
+          lastUpdated: complaint.updated_at ? new Date(complaint.updated_at).toLocaleString() : 'Unknown',
+          assignedTo: 'Not Assigned',
+          timeline: [
+            {
+              stage: 'Submitted',
+              description: 'Complaint registered',
+              date: complaint.created_at ? new Date(complaint.created_at).toLocaleString() : 'Unknown',
+              completed: true,
+            },
+            {
+              stage: complaint.status === 'resolved' ? 'Resolved' : 'In Progress',
+              description: complaint.status === 'resolved' ? 'Complaint resolved' : 'Being processed',
+              date: complaint.status === 'resolved' && complaint.updated_at ? new Date(complaint.updated_at).toLocaleString() : 'Pending',
+              completed: complaint.status === 'resolved',
+            },
+          ],
+        }));
+
+        setComplaints(transformed);
+      } catch (fetchError) {
+        console.error('Error fetching complaints:', fetchError);
+        setError(fetchError.message || 'Failed to load complaints');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaints();
+  }, []);
+
+  const filtered = complaints.filter((c) => {
     const matchSearch = c.title.toLowerCase().includes(search.toLowerCase()) || c.id.includes(search);
     const matchFilter = filter === 'all' || c.status === filter;
     return matchSearch && matchFilter;
   });
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-5">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
+          <p className="text-slate-500 mt-4">Loading complaints...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-5">
+        <div className="text-center py-12">
+          <p className="text-red-600 font-semibold">{error}</p>
+          <p className="text-slate-500 mt-2">Please login or refresh the page.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-5">

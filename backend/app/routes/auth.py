@@ -69,7 +69,7 @@ def login():
         
         # Create JWT token
         access_token = create_access_token(
-            identity=user.id,
+            identity=str(user.id),
             additional_claims={'user_type': user.user_type}
         )
         
@@ -88,7 +88,7 @@ def login():
 def get_profile():
     """Get current user profile"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         
         if not user:

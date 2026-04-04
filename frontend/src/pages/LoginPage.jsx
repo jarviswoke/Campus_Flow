@@ -5,16 +5,32 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const [currState, setCurrState] = useState("Sign Up")
+  const [collegeId, setCollegeId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [registerAs, setRegisterAs] = useState("");
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
   const handleAuth = async () => {
     setLoading(true);
-    const url = currState === "Sign Up" ? "http://localhost:5000/api/user/signup" : "http://localhost:5000/api/user/login";
-    const body = currState === "Sign Up" ? { name, email, password, registerAs } : { email, password };
+    const url = currState === "Sign Up"
+      ? `${BACKEND_URL}/api/auth/register`
+      : `${BACKEND_URL}/api/auth/login`;
+    const body = currState === "Sign Up"
+      ? {
+          college_id: collegeId,
+          email,
+          password,
+          full_name: name,
+          user_type: registerAs || 'student',
+        }
+      : {
+          college_id: collegeId,
+          password,
+        };
 
     try {
       const res = await fetch(url, {
@@ -25,25 +41,29 @@ const LoginPage = () => {
 
       const data = await res.json();
 
-      if (data.success) {
-        // Store user data and token
-        if (data.token) localStorage.setItem('token', data.token);
-        if (data.userData) localStorage.setItem('userData', JSON.stringify(data.userData));
+      if (!res.ok) {
+        alert(data.error || data.message || "Auth failed");
+        return;
+      }
 
-        // Determine role and store it
-        const role = (registerAs || data.userData?.role || 'student').toLowerCase();
-        localStorage.setItem('role', role);
+      if (currState === "Sign Up") {
+        alert(data.message || "Registration successful");
+        setCurrState("Login");
+        return;
+      }
 
-        // Role-based redirect
-        if (role === 'faculty') {
-          navigate('/faculty');
-        } else if (role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+      if (data.access_token) localStorage.setItem('token', data.access_token);
+      if (data.user) localStorage.setItem('userData', JSON.stringify(data.user));
+
+      const role = (data.user?.user_type || registerAs || 'student').toLowerCase();
+      localStorage.setItem('role', role);
+
+      if (role === 'faculty') {
+        navigate('/faculty');
+      } else if (role === 'admin') {
+        navigate('/admin');
       } else {
-        alert(data.message);
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error(err);
@@ -67,14 +87,40 @@ const LoginPage = () => {
           <p className="text-gray-700 text-lg font-bold">Campus Flow</p>
         </div>
         <h1 className="font-md font-bold text-xl text-gray-700">{currState}</h1>
-        {
-          currState === 'Sign Up' && (
-            <input onChange={(e) => setName(e.target.value)} type="text" placeholder='Full Name' value={name} className="w-full px-3 py-2 border border-gray-200 rounded-md transition" />
-          )
-        }
+        <input
+          onChange={(e) => setCollegeId(e.target.value)}
+          type="text"
+          placeholder='College ID'
+          value={collegeId}
+          className="w-full px-3 py-2 border border-gray-200 rounded-md transition"
+        />
 
-        <input onChange={(e) => setEmail(e.target.value)} type="email" placeholder='Email' value={email} className="w-full px-3 py-2 border border-gray-200 rounded-md transition" />
-        <input onChange={(e) => setPassword(e.target.value)} type="password" placeholder='Password' value={password} className="w-full px-3 py-2 border border-gray-200 rounded-md transition" />
+        {currState === 'Sign Up' && (
+          <>
+            <input
+              onChange={(e) => setName(e.target.value)}
+              type="text"
+              placeholder='Full Name'
+              value={name}
+              className="w-full px-3 py-2 border border-gray-200 rounded-md transition"
+            />
+            <input
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              placeholder='Email'
+              value={email}
+              className="w-full px-3 py-2 border border-gray-200 rounded-md transition"
+            />
+          </>
+        )}
+
+        <input
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          placeholder='Password'
+          value={password}
+          className="w-full px-3 py-2 border border-gray-200 rounded-md transition"
+        />
 
         {/* Role selector */}
         <select

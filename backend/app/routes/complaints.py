@@ -10,7 +10,7 @@ bp = Blueprint('complaints', __name__, url_prefix='/api/complaints')
 def create_complaint():
     """Submit new complaint"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         data = request.get_json()
         
         # Validate required fields
@@ -45,7 +45,7 @@ def create_complaint():
 def get_complaints():
     """Get all complaints (filtered by user role)"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         claims = get_jwt()
         user_type = claims.get('user_type')
         

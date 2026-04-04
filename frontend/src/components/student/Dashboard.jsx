@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from "framer-motion";
 import {
   MessageSquare, CheckCircle, Clock, AlertCircle,
@@ -7,18 +8,18 @@ import {
 import { useNavigate } from 'react-router-dom';
 import ComplaintForm from '../student/ComplaintForm';
 
-const STATS = [
-  { label: 'Total Complaints', value: '12', change: '+2 this week', icon: MessageSquare, color: 'blue' },
-  { label: 'Resolved', value: '8', change: '66% resolution rate', icon: CheckCircle, color: 'green' },
-  { label: 'In Progress', value: '3', change: 'Avg 2 days', icon: Clock, color: 'amber' },
-  { label: 'Pending', value: '1', change: 'Within SLA', icon: AlertCircle, color: 'red' },
+const STAT_CONFIG = [
+  { label: 'Total Complaints', key: 'total', icon: MessageSquare, color: 'blue' },
+  { label: 'Resolved', key: 'resolved', icon: CheckCircle, color: 'green' },
+  { label: 'Open', key: 'open', icon: Clock, color: 'amber' },
+  { label: 'Pending', key: 'pending', icon: AlertCircle, color: 'red' },
 ];
 
-const RECENT = [
-  { id: 'CMP024591234', title: 'Air Conditioner not working', category: 'Hostel', status: 'in-progress', date: '2 hours ago', priority: 'high' },
-  { id: 'CMP024589012', title: 'Broken chair in classroom', category: 'Classroom', status: 'resolved', date: '1 day ago', priority: 'medium' },
-  { id: 'CMP024587890', title: 'WiFi connectivity issue', category: 'IT', status: 'in-progress', date: '2 days ago', priority: 'high' },
-];
+// const RECENT = [
+//   { id: 'CMP024591234', title: 'Air Conditioner not working', category: 'Hostel', status: 'in-progress', date: '2 hours ago', priority: 'high' },
+//   { id: 'CMP024589012', title: 'Broken chair in classroom', category: 'Classroom', status: 'resolved', date: '1 day ago', priority: 'medium' },
+//   { id: 'CMP024587890', title: 'WiFi connectivity issue', category: 'IT', status: 'in-progress', date: '2 days ago', priority: 'high' },
+// ];
 
 const ANNOUNCEMENTS = [
   { title: 'Hostel Maintenance Schedule', desc: 'Scheduled maintenance in Block A on Jan 28', date: 'Today', type: 'info' },
@@ -34,15 +35,77 @@ const colorMap = {
 };
 
 const statusStyles = {
-  'in-progress': 'bg-amber-50 text-amber-700 border-amber-200',
+  open: 'bg-amber-50 text-amber-700 border-amber-200',
   resolved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   pending: 'bg-slate-50 text-slate-600 border-slate-200',
+};
+
+const statusLabels = {
+  open: 'Open',
+  pending: 'Pending',
+  resolved: 'Resolved',
 };
 
 const announcementDot = { info: 'bg-blue-500', success: 'bg-emerald-500', warning: 'bg-amber-500' };
 
 export default function Dashboard({ }) {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
+  const [RECENT, setRECENT] = React.useState([]);
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
+  const totalComplaints = RECENT.length;
+  const resolvedCount = RECENT.filter((c) => c.status === 'resolved').length;
+  const openCount = RECENT.filter((c) => c.status === 'open').length;
+  const pendingCount = RECENT.filter((c) => c.status === 'pending').length;
+  const resolutionRate = totalComplaints ? Math.round((resolvedCount / totalComplaints) * 100) : 0;
+
+  const stats = STAT_CONFIG.map((item) => {
+    let value = 0;
+    let change = '';
+
+    if (item.key === 'total') {
+      value = totalComplaints;
+      change = totalComplaints ? `${totalComplaints} logged` : 'No complaints yet';
+    } else if (item.key === 'resolved') {
+      value = resolvedCount;
+      change = totalComplaints ? `${resolutionRate}% resolution rate` : 'No complaints yet';
+    } else if (item.key === 'open') {
+      value = openCount;
+      change = openCount ? `${openCount} open` : 'All caught up';
+    } else if (item.key === 'pending') {
+      value = pendingCount;
+      change = pendingCount ? `${pendingCount} pending` : 'No pending items';
+    }
+
+    return { ...item, value, change };
+  });
+
+  const onNavigate = (path) => {
+    navigate(`/${path}`);
+  };
+
+  React.useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/`, { headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Failed to load complaints:', data);
+          return;
+        }
+
+        setRECENT(data.complaints || []);
+      } catch (error) {
+        console.error('Error fetching complaints:', error);
+      }
+    };
+    fetchComplaints();
+  }, []);
 
   return (
     
@@ -66,7 +129,7 @@ export default function Dashboard({ }) {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((s, i) => {
+        {stats.map((s, i) => {
           const Icon = s.icon;
           return (
             <motion.div
@@ -114,7 +177,7 @@ export default function Dashboard({ }) {
                   <p className="text-xs text-slate-400">{c.category} • {c.date}</p>
                 </div>
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full border shrink-0 ${statusStyles[c.status]}`}>
-                  {c.status === 'in-progress' ? 'In Progress' : c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                  {statusLabels[c.status] || c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                 </span>
               </div>
             ))}

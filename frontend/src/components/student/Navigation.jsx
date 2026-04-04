@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Home, DoorOpen, MessageSquare, List, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,11 +12,42 @@ const NAV_ITEMS = [
 
 export default function Navigation({ activeTab = 'dashboard' }) {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setUser(data.user || null);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
+
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'US';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
@@ -58,11 +90,11 @@ export default function Navigation({ activeTab = 'dashboard' }) {
         {/* User chip + Logout */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="hidden sm:block text-right">
-            <p className="text-sm font-semibold text-slate-900 leading-tight">Suhani Kabra</p>
-            <p className="text-xs text-slate-400 font-mono">ST2024001</p>
+            <p className="text-sm font-semibold text-slate-900 leading-tight">{user?.full_name || 'Student'}</p>
+            <p className="text-xs text-slate-400 font-mono">{user?.college_id || 'N/A'}</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-sm font-bold shadow">
-            SK
+            {initials}
           </div>
 
           {/* Logout Button */}
