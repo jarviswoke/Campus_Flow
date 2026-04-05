@@ -1,19 +1,23 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardList, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode";
 
-const STATS = [
-  { label: 'Total Complaints', value: '47', change: '+8 this week', icon: ClipboardList, color: 'blue' },
-  { label: 'Resolved', value: '32', change: '68% resolution rate', icon: CheckCircle, color: 'green' },
-  { label: 'In Progress', value: '12', change: 'Avg 1.5 days', icon: Clock, color: 'amber' },
-  { label: 'Pending', value: '3', change: 'Needs attention', icon: AlertCircle, color: 'red' },
-];
+// const STATS = [
+//   { label: 'Total Complaints', value: '47', change: '+8 this week', icon: ClipboardList, color: 'blue' },
+//   { label: 'Resolved', value: '32', change: '68% resolution rate', icon: CheckCircle, color: 'green' },
+//   { label: 'In Progress', value: '12', change: 'Avg 1.5 days', icon: Clock, color: 'amber' },
+//   { label: 'Pending', value: '3', change: 'Needs attention', icon: AlertCircle, color: 'red' },
+// ];
 
-const URGENT = [
-  { id: 'CMP024591234', title: 'Air Conditioner not working', student: 'John Doe', location: 'Hostel Block A', priority: 'high', time: '2 hours ago' },
-  { id: 'CMP024587890', title: 'WiFi connectivity issue', student: 'Alice Smith', location: 'Computer Lab 1', priority: 'high', time: '5 hours ago' },
-  { id: 'CMP024583456', title: 'Projector not working', student: 'Bob Wilson', location: 'Room 201', priority: 'medium', time: '1 day ago' },
-];
+// const URGENT = [
+//   { id: 'CMP024591234', title: 'Air Conditioner not working', student: 'John Doe', location: 'Hostel Block A', priority: 'high', time: '2 hours ago' },
+//   { id: 'CMP024587890', title: 'WiFi connectivity issue', student: 'Alice Smith', location: 'Computer Lab 1', priority: 'high', time: '5 hours ago' },
+//   { id: 'CMP024583456', title: 'Projector not working', student: 'Bob Wilson', location: 'Room 201', priority: 'medium', time: '1 day ago' },
+// ];
+
+
 
 const SCHEDULE = [
   { time: '9:00 AM', subject: 'Data Structures', room: 'Room 201', students: 45 },
@@ -32,16 +36,80 @@ const colorMap = {
 const priorityCls = { high: 'bg-red-50 text-red-700 border-red-200', medium: 'bg-amber-50 text-amber-700 border-amber-200' };
 
 export default function FacultyDashboard({  }) {
+  
+  const [facultyName, setFacultyName] = React.useState('');
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+  
+
   const navigate=useNavigate();
 
+  React.useEffect(() => {
+    const fetchUrgent = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/urgent`, { headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Failed to load complaints:', data);
+          return;
+        }
+
+        setURGENT(data.complaints || []);
+      } catch (error) {
+        console.error('Error fetching complaints:', error);
+      }
+    };
+    fetchUrgent();
+  }, []);
+
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/stats`, { headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Failed to load stats:', data);
+          return;
+        }
+
+        setStats(data);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decoded = jwtDecode(token);
+      setFacultyName(decoded.full_name);
+    }
+  }, []);
+
+  const [URGENT, setURGENT] = React.useState([]);
+  const [stats, setStats] = React.useState(null);
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Faculty Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Welcome back, Dr. Sarah Johnson</p>
+          <p className="text-slate-500 text-sm mt-0.5">Welcome back, {facultyName}</p>
         </div>
-        <button onClick={() => navigate('/complaints')}
+        <button onClick={() => navigate('/faculty/complaints')}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
           <ClipboardList className="w-4 h-4" /> View All Complaints
         </button>
@@ -49,7 +117,32 @@ export default function FacultyDashboard({  }) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((s, i) => {
+        {stats && [
+          {
+            label: 'Total Complaints',
+            value: stats.total,
+            icon: ClipboardList,
+            color: 'blue'
+          },
+          {
+            label: 'Resolved',
+            value: stats.resolved,
+            icon: CheckCircle,
+            color: 'green'
+          },
+          {
+            label: 'In Progress',
+            value: stats.open,
+            icon: Clock,
+            color: 'amber'
+          },
+          {
+            label: 'Pending',
+            value: stats.pending,
+            icon: AlertCircle,
+            color: 'red'
+          }
+        ].map((s, i) => {
           const Icon = s.icon;
           return (
             <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}

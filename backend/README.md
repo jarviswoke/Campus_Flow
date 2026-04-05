@@ -46,6 +46,8 @@ Server will start on: http://localhost:5000
 - GET /api/complaints - Get all complaints
 - GET /api/complaints/<id> - Get specific complaint
 - PUT /api/complaints/<id>/status - Update status
+- GET /api/complaints/urgent - Get high/urgent priority complaints (for faculty)
+- GET /api/complaints/stats - Get complaints stats (for faculty and admin users)
 
 ### Rooms
 - GET /api/rooms - Get all rooms

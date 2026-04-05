@@ -56,7 +56,7 @@ class Complaint(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
     priority = db.Column(db.Enum('low', 'medium', 'high', 'urgent'), default='medium')
-    status = db.Column(db.Enum('open', 'pending', 'resolved'), default='open')
+    status = db.Column(db.Enum('open', 'pending', 'resolved'), default='pending')
     assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
     resolution_notes = db.Column(db.Text)
     resolved_at = db.Column(db.DateTime)

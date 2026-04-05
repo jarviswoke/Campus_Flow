@@ -70,7 +70,12 @@ def login():
         # Create JWT token
         access_token = create_access_token(
             identity=str(user.id),
-            additional_claims={'user_type': user.user_type}
+            additional_claims={
+                'user_type': user.user_type,
+                "full_name": user.full_name,
+                "department": user.department,
+                }
+
         )
         
         return jsonify({
