@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   School, FlaskConical, Home as HomeIcon, Monitor, BookOpen,
   MapPin, AlertCircle, ArrowRight, ArrowLeft, Send, Loader2,
+  FileText, Search,
 } from 'lucide-react';
 import StepIndicator from '@/components/ui/stepindicator.jsx';
 import ImageUpload from '@/components/ui/imageupload.jsx';
@@ -32,9 +34,63 @@ const STEPS = [
 const MAX_DESC = 500;
 
 export default function ComplaintForm({ onSubmit }) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [image, setImage] = useState(null);
+  const [existingComplaints, setExistingComplaints] = useState([]);
+  const [complaintsLoading, setComplaintsLoading] = useState(false);
+  const [showExistingComplaints, setShowExistingComplaints] = useState(false);
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
+  // Helper function for authenticated API calls
+  const makeAuthenticatedRequest = async (url, options = {}) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers,
+    };
+
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  };
+
+  // Fetch existing complaints on component mount
+  useEffect(() => {
+    const fetchExistingComplaints = async () => {
+      try {
+        setComplaintsLoading(true);
+
+        const response = await makeAuthenticatedRequest(`${BACKEND_URL}/api/complaints/`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Failed to fetch complaints:', data);
+          return;
+        }
+
+        setExistingComplaints(data.complaints || []);
+      } catch (error) {
+        if (error.message === 'No authentication token found') {
+          // User not logged in, don't fetch
+          return;
+        }
+        console.error('Error fetching complaints:', error);
+      } finally {
+        setComplaintsLoading(false);
+      }
+    };
+
+    fetchExistingComplaints();
+  }, []);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: { title: '', category: '', location: '', description: '' },
@@ -46,9 +102,42 @@ export default function ComplaintForm({ onSubmit }) {
 
   const handleFinalSubmit = async (data) => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    onSubmit({ ...data, image });
-    setSubmitting(false);
+    try {
+      const response = await makeAuthenticatedRequest(`${BACKEND_URL}/api/complaints/`, {
+        method: 'POST',
+        body: JSON.stringify({
+          category: data.category,
+          title: data.title,
+          description: data.description,
+          priority: 'medium', // Default priority
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.error || 'Failed to submit complaint');
+        return;
+      }
+
+      // Success - navigate to success page
+      navigate('/success', {
+        state: {
+          complaint: result.complaint,
+          message: result.message,
+        },
+      });
+    } catch (error) {
+      if (error.message === 'No authentication token found') {
+        alert('Please login first');
+        navigate('/login');
+        return;
+      }
+      console.error('Error submitting complaint:', error);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -161,6 +250,76 @@ export default function ComplaintForm({ onSubmit }) {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Attach Image <span className="text-slate-400 font-normal">(Optional)</span></label>
                 <ImageUpload image={image} onImageChange={setImage} />
+              </div>
+
+              {/* Existing Complaints Check */}
+              <div className="border-t border-slate-100 pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-slate-700">Check Existing Complaints</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowExistingComplaints(!showExistingComplaints)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  >
+                    {showExistingComplaints ? 'Hide' : 'Show'} Recent Complaints
+                    <Search className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {showExistingComplaints && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-4"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileText className="w-4 h-4 text-slate-500" />
+                      <span className="text-sm font-medium text-slate-700">Your Recent Complaints</span>
+                    </div>
+
+                    {complaintsLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                        <span className="text-sm text-slate-500 ml-2">Loading...</span>
+                      </div>
+                    ) : existingComplaints.length === 0 ? (
+                      <p className="text-sm text-slate-500 text-center py-4">No complaints found.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {existingComplaints.slice(0, 5).map((complaint) => (
+                          <div key={complaint.complaint_id} className="bg-white border border-slate-200 rounded-lg p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-900 truncate">{complaint.title}</p>
+                                <p className="text-xs text-slate-500">{complaint.category} • {complaint.status}</p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {complaint.created_at ? new Date(complaint.created_at).toLocaleDateString() : 'Unknown date'}
+                                </p>
+                              </div>
+                              <span className={`text-xs px-2 py-1 rounded-full border ${
+                                complaint.status === 'resolved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                complaint.status === 'in-progress' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                'bg-slate-50 text-slate-600 border-slate-200'
+                              }`}>
+                                {complaint.status === 'in-progress' ? 'In Progress' : complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {existingComplaints.length > 5 && (
+                          <p className="text-xs text-slate-500 text-center pt-2">
+                            And {existingComplaints.length - 5} more complaints...
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-500 mt-3">
+                      Check if your issue has already been reported before submitting a new complaint.
+                    </p>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}

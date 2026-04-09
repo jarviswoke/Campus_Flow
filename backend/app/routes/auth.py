@@ -69,7 +69,12 @@ def login():
         # Create JWT token
         access_token = create_access_token(
             identity=str(user.id),
-            additional_claims={'user_type': user.user_type}
+
+            additional_claims={
+                'user_type': user.user_type,
+                "full_name": user.full_name,
+                "department": user.department,
+                }
         )
         
         return jsonify({
@@ -87,7 +92,7 @@ def login():
 def get_profile():
     """Get current user profile"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         
         if not user:

@@ -1,12 +1,6 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Calendar, BookOpen, Award, Edit, Bell, Shield } from 'lucide-react';
-
-const STATS = [
-  { label: 'Total Complaints', value: '12', icon: BookOpen, color: 'blue' },
-  { label: 'Resolved', value: '8', icon: Award, color: 'green' },
-  { label: 'Current Semester', value: '6th', icon: Calendar, color: 'purple' },
-  { label: 'CGPA', value: '8.5', icon: Award, color: 'amber' },
-];
 
 const colorMap = {
   blue: 'bg-blue-50 text-blue-600',
@@ -16,6 +10,73 @@ const colorMap = {
 };
 
 export default function Profile() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/auth/profile`, { headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Unable to load profile');
+          return;
+        }
+
+        setProfile(data.user || null);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Unable to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto py-16 text-center text-slate-500">Loading profile...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-4xl mx-auto py-16 text-center text-red-600">{error}</div>
+    );
+  }
+
+  const initials = profile?.full_name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'ST';
+  const stats = [
+    { label: 'College ID', value: profile?.college_id || 'N/A', icon: BookOpen, color: 'blue' },
+    { label: 'Department', value: profile?.department || 'N/A', icon: Award, color: 'green' },
+    { label: 'Year / Semester', value: profile?.year_semester || 'N/A', icon: Calendar, color: 'purple' },
+    { label: 'Status', value: profile?.is_active ? 'Active' : 'Inactive', icon: Shield, color: 'amber' },
+  ];
+
+  const personalInfo = [
+    { icon: Mail, label: 'Email', value: profile?.email || 'Not provided' },
+    { icon: Phone, label: 'Phone', value: profile?.mobile || 'Not provided' },
+    { icon: MapPin, label: 'Department', value: profile?.department || 'Not provided' },
+    { icon: Calendar, label: 'Year / Semester', value: profile?.year_semester || 'Not provided' },
+  ];
+
+  const academicInfo = [
+    { label: 'College ID', value: profile?.college_id || 'N/A' },
+    { label: 'User Type', value: profile?.user_type || 'N/A' },
+    { label: 'Verified', value: profile?.is_verified ? 'Yes' : 'No' },
+    { label: 'Joined', value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A' },
+    { label: 'Bio', value: profile?.bio || 'No bio available' },
+  ];
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-5">
       {/* Hero card */}
@@ -26,19 +87,19 @@ export default function Profile() {
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
             <div className="relative group">
               <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-3xl font-bold">
-                SK
+                {initials}
               </div>
             </div>
             <div className="flex-1 sm:pb-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">Suhani Kabra</h1>
-                  <p className="text-slate-500 text-sm">Computer Science Engineering</p>
+                  <h1 className="text-2xl font-bold text-slate-900">{profile?.full_name || 'Student'}</h1>
+                  <p className="text-slate-500 text-sm">{profile?.department || 'Department not set'}</p>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">ST2024001</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-xs text-slate-500">Batch 2021–2025</span>
-                    <span className="text-xs bg-emerald-100 text-emerald-700 font-medium px-2 py-0.5 rounded-full">Active</span>
+                    <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{profile?.college_id || 'N/A'}</span>
+                    <span className="text-xs text-slate-500">•</span>
+                    <span className="text-xs text-slate-500">{profile?.year_semester || 'Year/Semester not set'}</span>
+                    <span className={`text-xs ${profile?.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} font-medium px-2 py-0.5 rounded-full`}>{profile?.is_active ? 'Active' : 'Inactive'}</span>
                   </div>
                 </div>
                 <button className="flex items-center gap-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors">
@@ -50,7 +111,7 @@ export default function Profile() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            {STATS.map((s) => {
+            {stats.map((s) => {
               const Icon = s.icon;
               return (
                 <div key={s.label} className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -75,12 +136,7 @@ export default function Profile() {
             <User className="w-4 h-4 text-blue-500" /> Personal Information
           </h2>
           <div className="space-y-3">
-            {[
-              { icon: Mail, label: 'Email', value: 'suhani@gmail.com' },
-              { icon: Phone, label: 'Phone', value: '+91 98765 43210' },
-              { icon: MapPin, label: 'Address', value: 'Hostel Block A, Room 205' },
-              { icon: Calendar, label: 'Date of Birth', value: 'March 15, 2003' },
-            ].map(({ icon: Icon, label, value }) => (
+            {personalInfo.map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
                   <Icon className="w-4 h-4 text-slate-400" />
@@ -101,13 +157,7 @@ export default function Profile() {
             <BookOpen className="w-4 h-4 text-blue-500" /> Academic Information
           </h2>
           <div className="space-y-3">
-            {[
-              { label: 'Department', value: 'Computer Science Engineering' },
-              { label: 'Program', value: 'B.Tech' },
-              { label: 'Enrollment Year', value: '2021' },
-              { label: 'Expected Graduation', value: '2025' },
-              { label: 'Roll Number', value: 'CSE21B001' },
-            ].map(({ label, value }) => (
+            {academicInfo.map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
                 <span className="text-slate-500">{label}</span>
                 <span className="font-medium text-slate-900">{value}</span>

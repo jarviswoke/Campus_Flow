@@ -18,7 +18,10 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app,
+         resources={r"/api/*": {"origins": "*"}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"])
     jwt.init_app(app)
     mail.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")

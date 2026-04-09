@@ -1,18 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Users, Wifi, Monitor, AirVent, CheckCircle, BookOpen, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-
-const ROOMS = [
-  { id: 1, name: 'Room 101', building: 'Main Building', floor: 'Ground Floor', capacity: 40, type: 'Classroom', amenities: ['Projector', 'AC', 'WiFi', 'Whiteboard'], available: true },
-  { id: 2, name: 'Lab A', building: 'Engineering Block', floor: 'First Floor', capacity: 30, type: 'Laboratory', amenities: ['Computers', 'AC', 'WiFi'], available: false, nextAvailable: '2:00 PM' },
-  { id: 3, name: 'Room 201', building: 'Science Block', floor: 'Second Floor', capacity: 50, type: 'Classroom', amenities: ['Projector', 'AC', 'WiFi', 'Smart Board'], available: true },
-  { id: 4, name: 'Computer Lab 1', building: 'IT Wing', floor: 'Ground Floor', capacity: 60, type: 'Computer Lab', amenities: ['Computers', 'AC', 'WiFi', 'Projector'], available: true },
-  { id: 5, name: 'Seminar Hall', building: 'Main Building', floor: 'Third Floor', capacity: 100, type: 'Seminar', amenities: ['Projector', 'AC', 'WiFi', 'Audio System'], available: false, nextAvailable: '4:00 PM' },
-  { id: 6, name: 'Room 102', building: 'Main Building', floor: 'Ground Floor', capacity: 35, type: 'Classroom', amenities: ['Projector', 'WiFi', 'Whiteboard'], available: true },
-  { id: 7, name: 'Library Reading Room', building: 'Library Block', floor: 'First Floor', capacity: 80, type: 'Library', amenities: ['WiFi', 'AC', 'Quiet Zone'], available: true },
-  { id: 8, name: 'Lab B', building: 'Engineering Block', floor: 'Second Floor', capacity: 25, type: 'Laboratory', amenities: ['Equipment', 'AC', 'WiFi'], available: true },
-];
 
 const amenityIcon = (a) => {
   if (a === 'WiFi') return <Wifi className="w-3 h-3" />;
@@ -30,14 +19,78 @@ const typeColor = {
   Library: 'bg-emerald-50 text-emerald-700',
 };
 
+const roomTypeLabel = {
+  classroom: 'Classroom',
+  lab: 'Laboratory',
+  seminar_hall: 'Seminar Hall',
+};
+
 export default function VacantRooms() {
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
 
-  const types = ['all', ...new Set(ROOMS.map((r) => r.type))];
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
 
-  const filtered = ROOMS.filter((r) => {
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Please login to view rooms.');
+          return;
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/rooms/`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.error || 'Failed to fetch rooms');
+          return;
+        }
+
+        const transformedRooms = (data.rooms || []).map((room) => ({
+          id: room.id,
+          name: room.name,
+          building: room.building,
+          floor: room.floor || 'N/A',
+          capacity: room.capacity,
+          type: roomTypeLabel[room.room_type] || 'Other',
+          amenities: [
+            room.facilities?.projector ? 'Projector' : null,
+            room.facilities?.ac ? 'AC' : null,
+            room.facilities?.computers ? 'Computers' : null,
+          ].filter(Boolean),
+          available: room.status === 'available',
+          nextAvailable: room.nextClass || null,
+          currentClass: room.currentClass || null,
+          status: room.status,
+        }));
+
+        setRooms(transformedRooms);
+      } catch (err) {
+        console.error('Error fetching rooms:', err);
+        setError('Unable to load rooms');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
+  const types = ['all', ...new Set(rooms.map((r) => r.type))];
+
+  const filtered = rooms.filter((r) => {
     const q = search.toLowerCase();
     const matchSearch = r.name.toLowerCase().includes(q) || r.building.toLowerCase().includes(q);
     const matchType = typeFilter === 'all' || r.type === typeFilter;
@@ -45,13 +98,31 @@ export default function VacantRooms() {
     return matchSearch && matchType && matchAvail;
   });
 
+  if (loading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto space-y-5 text-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
+        <p className="text-slate-500 mt-4">Loading rooms...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-7xl mx-auto space-y-5 text-center py-16">
+        <p className="text-red-600 font-semibold">{error}</p>
+        <p className="text-slate-500 mt-2">Please login or refresh the page.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Vacant Rooms</h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            {ROOMS.filter((r) => r.available).length} of {ROOMS.length} rooms available right now.
+            {rooms.filter((r) => r.available).length} of {rooms.length} rooms available right now.
           </p>
         </div>
       </div>

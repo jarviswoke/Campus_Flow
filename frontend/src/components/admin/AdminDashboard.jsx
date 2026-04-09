@@ -1,3 +1,5 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, ClipboardList, DoorOpen, Activity, ArrowRight, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
 
@@ -6,12 +8,6 @@ const STATS = [
   { label: 'Active Complaints', value: '47', change: '15 pending action', icon: ClipboardList, color: 'amber', sub: 'Critical: 8 · High: 15' },
   { label: 'Room Occupancy', value: '73%', change: '124 rooms active', icon: DoorOpen, color: 'green', sub: 'Occupied: 124 · Available: 46' },
   { label: 'System Health', value: '98%', change: 'All systems operational', icon: Activity, color: 'purple', sub: 'Uptime: 99.9% · 120ms' },
-];
-
-const URGENT = [
-  { priority: 'critical', title: 'Power outage in Hostel Block C', details: 'Affecting 150+ students', time: '15 mins ago', assigned: 'Not Assigned' },
-  { priority: 'high', title: 'Timetable conflict – Room 205', details: 'CS301 and MA201 scheduled simultaneously', time: '1 hour ago', assigned: 'Admin Review' },
-  { priority: 'medium', title: 'New faculty registration pending', details: 'Dr. Michael Chen – Computer Science', time: '2 hours ago', assigned: 'HR Department' },
 ];
 
 const ACTIVITY = [
@@ -29,9 +25,79 @@ const colorMap = {
 };
 
 const urgencyColor = { critical: 'bg-red-500', high: 'bg-orange-400', medium: 'bg-amber-400' };
-const activityIcon = { success: <CheckCircle className="w-4 h-4 text-emerald-500" />, user: <Users className="w-4 h-4 text-blue-500" />, info: <ArrowRight className="w-4 h-4 text-indigo-400" />, system: <Activity className="w-4 h-4 text-slate-400" /> };
+const activityIcon = {
+  success: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  user: <Users className="w-4 h-4 text-blue-500" />,
+  info: <ArrowRight className="w-4 h-4 text-indigo-400" />,
+  system: <Activity className="w-4 h-4 text-slate-400" />
+};
 
 export default function AdminDashboard({ onNavigate }) {
+  const navigate = useNavigate();
+  const [URGENT, setURGENT] = React.useState([]);
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+
+  React.useEffect(() => {
+    const fetchURGENT = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/urgent`, { headers });
+        const data = await response.json();
+        console.log(data);
+
+        if (!response.ok) {
+          console.error('Failed to load complaints:', data);
+          return;
+        }
+
+        setURGENT(data.complaints || []);
+      } catch (error) {
+        console.error('Error fetching complaints:', error);
+      }
+    };
+    fetchURGENT();
+  }, []);
+
+  // ✅ Added stats logic (based on URGENT)
+  const totalUrgent = URGENT.length;
+  const criticalCount = URGENT.filter(i => i.priority === "critical").length;
+  const highCount = URGENT.filter(i => i.priority === "high").length;
+  const mediumCount = URGENT.filter(i => i.priority === "medium").length;
+
+  const stats = [
+    {
+      label: 'Total Urgent',
+      value: totalUrgent,
+      icon: ClipboardList,
+      color: 'blue',
+      sub: totalUrgent ? `${totalUrgent} issues detected` : 'No urgent issues'
+    },
+    {
+      label: 'Critical',
+      value: criticalCount,
+      icon: AlertCircle,
+      color: 'red',
+      sub: criticalCount ? `${criticalCount} critical` : 'All clear'
+    },
+    {
+      label: 'High',
+      value: highCount,
+      icon: Zap,
+      color: 'amber',
+      sub: highCount ? `${highCount} high priority` : 'No high priority'
+    },
+    {
+      label: 'Medium',
+      value: mediumCount,
+      icon: Clock,
+      color: 'green',
+      sub: mediumCount ? `${mediumCount} medium` : 'No medium issues'
+    }
+  ];
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -47,11 +113,16 @@ export default function AdminDashboard({ onNavigate }) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((s, i) => {
+        {stats.map((s, i) => {
           const Icon = s.icon;
           return (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
+            >
               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${colorMap[s.color]}`}>
                 <Icon className="w-5 h-5" />
               </div>
@@ -62,7 +133,7 @@ export default function AdminDashboard({ onNavigate }) {
           );
         })}
       </div>
- 
+
       {/* Urgent + Activity */}
       <div className="grid lg:grid-cols-2 gap-5">
         {/* Urgent items */}
@@ -90,12 +161,14 @@ export default function AdminDashboard({ onNavigate }) {
           </div>
         </div>
 
-        {/* Recent activity */}
+        {/* Recent activity (unchanged) */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-slate-900">Recent Activity</h2>
-            <button onClick={() => onNavigate('audit')}
-              className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700">
+            <button
+              onClick={() => onNavigate('audit')}
+              className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700"
+            >
               View audit log <ArrowRight className="w-3 h-3" />
             </button>
           </div>
@@ -108,7 +181,9 @@ export default function AdminDashboard({ onNavigate }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-800">{a.action}</p>
                   <p className="text-xs text-slate-500 truncate">{a.details}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{a.user} · {a.time} ago</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {a.user} · {a.time} ago
+                  </p>
                 </div>
               </div>
             ))}

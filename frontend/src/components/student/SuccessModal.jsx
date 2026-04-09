@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, FileText, Calendar, Copy, Check, X } from 'lucide-react';
 
-export default function SuccessModal({ isOpen, onClose, complaintId }) {
+export default function SuccessModal({ isOpen, onClose, complaintId, onViewStatus }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -106,7 +106,7 @@ export default function SuccessModal({ isOpen, onClose, complaintId }) {
               Register Another
             </button>
             <button
-              onClick={onClose}
+              onClick={onViewStatus || onClose}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
             >
               View Status

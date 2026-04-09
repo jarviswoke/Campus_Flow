@@ -1,18 +1,18 @@
-import { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Search, CheckCircle, Clock, AlertCircle, MessageSquare, MapPin, User, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-const COMPLAINTS = [
-  { id: 'CMP024591234', title: 'Air Conditioner not working', student: 'John Doe (ST2024001)', location: 'Hostel Block A - Room 205', category: 'Hostel', status: 'in-progress', priority: 'high', date: 'Jan 24, 2026', description: 'The AC unit has stopped cooling entirely. Room temperature is very high making it unbearable.' },
-  { id: 'CMP024587890', title: 'WiFi connectivity issue', student: 'Alice Smith (ST2024002)', location: 'Computer Lab 1 - IT Wing', category: 'IT', status: 'pending', priority: 'high', date: 'Jan 22, 2026', description: 'Intermittent WiFi disconnections affecting multiple workstations.' },
-  { id: 'CMP024583456', title: 'Projector not working', student: 'Bob Wilson (ST2024003)', location: 'Room 201 - Science Block', category: 'Classroom', status: 'pending', priority: 'medium', date: 'Jan 21, 2026', description: 'Projector bulb appears to have burned out. Cannot display lecture slides.' },
-  { id: 'CMP024579012', title: 'Broken chair in lab', student: 'Carol Davis (ST2024004)', location: 'Lab A - Engineering Block', category: 'Laboratory', status: 'resolved', priority: 'low', date: 'Jan 20, 2026', description: 'One chair has a broken backrest and is unsafe.' },
-  { id: 'CMP024575678', title: 'Leaking water pipe', student: 'David Lee (ST2024005)', location: 'Hostel Block B - Room 102', category: 'Hostel', status: 'in-progress', priority: 'high', date: 'Jan 19, 2026', description: 'Water is leaking from the pipe under the sink, causing water damage.' },
-];
+// const COMPLAINTS = [
+//   { id: 'CMP024591234', title: 'Air Conditioner not working', student: 'John Doe (ST2024001)', location: 'Hostel Block A - Room 205', category: 'Hostel', status: 'in-progress', priority: 'high', date: 'Jan 24, 2026', description: 'The AC unit has stopped cooling entirely. Room temperature is very high making it unbearable.' },
+//   { id: 'CMP024587890', title: 'WiFi connectivity issue', student: 'Alice Smith (ST2024002)', location: 'Computer Lab 1 - IT Wing', category: 'IT', status: 'pending', priority: 'high', date: 'Jan 22, 2026', description: 'Intermittent WiFi disconnections affecting multiple workstations.' },
+//   { id: 'CMP024583456', title: 'Projector not working', student: 'Bob Wilson (ST2024003)', location: 'Room 201 - Science Block', category: 'Classroom', status: 'pending', priority: 'medium', date: 'Jan 21, 2026', description: 'Projector bulb appears to have burned out. Cannot display lecture slides.' },
+//   { id: 'CMP024579012', title: 'Broken chair in lab', student: 'Carol Davis (ST2024004)', location: 'Lab A - Engineering Block', category: 'Laboratory', status: 'resolved', priority: 'low', date: 'Jan 20, 2026', description: 'One chair has a broken backrest and is unsafe.' },
+//   { id: 'CMP024575678', title: 'Leaking water pipe', student: 'David Lee (ST2024005)', location: 'Hostel Block B - Room 102', category: 'Hostel', status: 'in-progress', priority: 'high', date: 'Jan 19, 2026', description: 'Water is leaking from the pipe under the sink, causing water damage.' },
+// ];
 
 const statusConfig = {
-  'in-progress': { label: 'In Progress', icon: Clock, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  open: { label: 'In Progress', icon: Clock, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   resolved: { label: 'Resolved', icon: CheckCircle, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   pending: { label: 'Pending', icon: AlertCircle, cls: 'bg-slate-50 text-slate-600 border-slate-200' },
 };
@@ -24,21 +24,91 @@ const priorityCls = {
 };
 
 export default function FacultyComplaints() {
-  const [complaints, setComplaints] = useState(COMPLAINTS);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [complaints, setComplaints] = React.useState([]);
+  const [filtered, setFiltered] = React.useState([]);
+  const [search, setSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
 
-  const filtered = complaints.filter((c) => {
-    const q = search.toLowerCase();
+  React.useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${BACKEND_URL}/api/complaints/`, { headers });
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('Failed to load complaints:', data);
+          return;
+        }
+
+        setComplaints(data.complaints || []);
+      } catch (error) {
+        console.error('Error fetching complaints:', error);
+      }
+
+    };
+    fetchComplaints();
+  }, []);
+
+  React.useEffect(() => {
+  const q = search.toLowerCase();
+
+  const result = complaints.filter((c) => {
     return (
-      (c.title.toLowerCase().includes(q) || c.id.includes(q) || c.student.toLowerCase().includes(q)) &&
+      (c.title?.toLowerCase().includes(q) ||
+        String(c.id).includes(q) ||
+        c.student?.toLowerCase().includes(q)) &&
       (statusFilter === 'all' || c.status === statusFilter)
     );
   });
 
-  const updateStatus = (id, newStatus) => {
-    setComplaints((prev) => prev.map((c) => c.id === id ? { ...c, status: newStatus } : c));
-    toast.success(`Complaint status updated to ${newStatus}`);
+  setFiltered(result);
+}, [complaints, search, statusFilter]);
+
+  // const updateStatus = (id, newStatus) => {
+  //   setComplaints((prev) => prev.map((c) => c.id === id ? { ...c, status: newStatus } : c));
+  //   toast.success(`Complaint status updated to ${newStatus}`);
+  // };
+  
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/complaints/${id}/status`,
+        {
+          method: 'PUT', 
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to update');
+        return;
+      }
+
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: newStatus } : c
+        )
+      );
+
+      toast.success('Status updated');
+    } catch (err) {
+      console.error(err);
+      toast.error('Something went wrong');
+    }
   };
 
   return (
@@ -70,7 +140,7 @@ export default function FacultyComplaints() {
       {/* Table / cards */}
       <div className="space-y-3">
         {filtered.map((c) => {
-          const sc = statusConfig[c.status];
+          const sc = statusConfig[c.status] || statusConfig['pending'];
           const StatusIcon = sc.icon;
           return (
             <motion.div key={c.id} layout
@@ -100,7 +170,7 @@ export default function FacultyComplaints() {
                       className="appearance-none pr-7 pl-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
                     >
                       <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
+                      <option value="open">In Progress</option>
                       <option value="resolved">Resolved</option>
                     </select>
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />

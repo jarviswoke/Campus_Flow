@@ -1,5 +1,7 @@
 import { LayoutDashboard, ClipboardList, CalendarDays, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,10 +12,21 @@ const NAV_ITEMS = [
 export default function FacultyNavigation({ activeTab = 'dashboard' }) {
   const navigate = useNavigate();
 
+  const [facultyName, setFacultyName] = React.useState('');
+  const [facultyDepartment, setFacultyDepartment] = React.useState('');
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decoded = jwtDecode(token);
+      setFacultyName(decoded.full_name);
+      setFacultyDepartment(decoded.department)
+    }
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-indigo-700 border-b border-indigo-800 shadow-lg">
@@ -49,11 +62,11 @@ export default function FacultyNavigation({ activeTab = 'dashboard' }) {
 
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="hidden sm:block text-right">
-            <p className="text-sm font-semibold text-white leading-tight">Dr. Sarah Johnson</p>
-            <p className="text-xs text-indigo-200">CS Department</p>
+            <p className="text-sm font-semibold text-white leading-tight">{facultyName}</p>
+            <p className="text-xs text-indigo-200">{facultyDepartment}</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-white/20 border border-indigo-300 flex items-center justify-center text-white text-sm font-bold">
-            SJ
+            FAC
           </div>
           <button onClick={handleLogout} title="Logout"
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-indigo-100 hover:bg-white/10 hover:text-white transition-all">
