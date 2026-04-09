@@ -7,7 +7,6 @@ Flask-SocketIO==5.3.5
 PyMySQL==1.1.0
 python-dotenv==1.0.0
 Werkzeug==3.0.1
-Pillow==10.1.0
 email-validator==2.1.0
 python-socketio==5.10.0
 eventlet==0.33.3

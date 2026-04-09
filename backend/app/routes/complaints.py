@@ -73,7 +73,7 @@ def get_urgent():
         claims = get_jwt()
         user_type = claims.get('user_type')
         
-        if user_type not in ['faculty']:
+        if user_type not in ['faculty', 'admin']:
             return jsonify({'error': 'Unauthorized - this route is for faculty only'}), 403
         
         complaints = Complaint.query.filter(
