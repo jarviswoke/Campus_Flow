@@ -41,8 +41,7 @@ def register():
         db.session.commit()
         
         return jsonify({
-            'message': 'Registration successful',
-            'user': user.to_dict()
+            'message': 'Registration successful'
         }), 201
         
     except Exception as e:
@@ -69,7 +68,7 @@ def login():
         
         # Create JWT token
         access_token = create_access_token(
-            identity=user.id,
+            identity=str(user.id),
             additional_claims={'user_type': user.user_type}
         )
         
@@ -97,4 +96,4 @@ def get_profile():
         return jsonify({'user': user.to_dict()}), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 500  
