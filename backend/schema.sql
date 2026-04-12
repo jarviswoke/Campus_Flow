@@ -134,3 +134,44 @@ CREATE TABLE IF NOT EXISTS notifications (
     INDEX idx_user_id (user_id),
     INDEX idx_is_read (is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Timetable table
+CREATE TABLE timetables (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    timetable_id VARCHAR(20) UNIQUE NOT NULL,
+    uploaded_by INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_type ENUM('excel', 'image', 'pdf') NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    semester VARCHAR(10),
+    status ENUM('pending', 'processing', 'active', 'failed') DEFAULT 'pending',
+    extracted_data JSON,
+    error_message TEXT,
+    is_active BOOLEAN DEFAULT FALSE,
+    processed_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+-- ClassSession table
+CREATE TABLE class_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    timetable_id INT NOT NULL,
+    room_id INT NOT NULL,
+    subject VARCHAR(100) NOT NULL,
+    class_name VARCHAR(100) NOT NULL,
+    faculty_name VARCHAR(100),
+    day VARCHAR(20) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    batch VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (timetable_id) REFERENCES timetables(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id)
+);
+
+-- Add new columns to rooms table
+ALTER TABLE rooms ADD COLUMN current_class VARCHAR(100);
+ALTER TABLE rooms ADD COLUMN next_class VARCHAR(100);

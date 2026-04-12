@@ -1,8 +1,9 @@
-from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import random
 import string
+from . import db
+
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -92,6 +93,62 @@ class Complaint(db.Model):
         }
 
 
+class Timetable(db.Model):
+    __tablename__ = 'timetables'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timetable_id = db.Column(db.String(20), unique=True, nullable=False)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.Enum('excel', 'image', 'pdf'), nullable=False)
+    academic_year = db.Column(db.String(20), nullable=False)  # e.g., "2024-2025"
+    semester = db.Column(db.String(10))  # e.g., "Fall", "Spring"
+    status = db.Column(db.Enum('pending', 'processing', 'active', 'failed'), default='pending')
+    extracted_data = db.Column(db.JSON)  # Stores parsed timetable data
+    error_message = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=False)
+    processed_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    uploader = db.relationship('User', backref='timetables')
+    class_sessions = db.relationship('ClassSession', backref='timetable', lazy=True, cascade='all, delete-orphan')
+    
+    def __init__(self, **kwargs):
+        super(Timetable, self).__init__(**kwargs)
+        if not self.timetable_id:
+            self.timetable_id = self.generate_timetable_id()
+    
+    @staticmethod
+    def generate_timetable_id():
+        return 'TT' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    def to_dict(self, include_data=False):
+        data = {
+            'id': self.id,
+            'timetable_id': self.timetable_id,
+            'file_name': self.file_name,
+            'file_type': self.file_type,
+            'academic_year': self.academic_year,
+            'semester': self.semester,
+            'status': self.status,
+            'is_active': self.is_active,
+            'processed_at': self.processed_at.isoformat() if self.processed_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'uploaded_by': self.uploader.full_name if self.uploader else None
+        }
+        
+        if include_data and self.extracted_data:
+            data['extracted_data'] = self.extracted_data
+        
+        if self.status == 'failed':
+            data['error_message'] = self.error_message
+        
+        return data
+
+
 class Room(db.Model):
     __tablename__ = 'rooms'
     
@@ -109,6 +166,9 @@ class Room(db.Model):
     next_class = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # ✅ FIXED: Add relationship to ClassSession
+    class_sessions = db.relationship('ClassSession', backref='room', lazy=True, cascade='all, delete-orphan')
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -125,4 +185,78 @@ class Room(db.Model):
                 'ac': self.has_ac,
                 'computers': self.has_computers
             }
+        }
+    
+    def update_status(self):
+        """Update room status based on current time and schedule"""
+        # ✅ FIXED: Import moved inside to avoid circular imports
+        from app.models import ClassSession
+        
+        # ✅ FIXED: Use local time instead of UTC
+        now = datetime.now()  # Changed from datetime.utcnow()
+        current_time = now.time()
+        current_day = now.strftime('%A').lower()
+        
+        print(f"[Room Status] {self.name}: Checking status at {current_time} on {current_day}")
+        
+        # Find current session (class happening RIGHT NOW)
+        current_session = ClassSession.query.filter(
+            ClassSession.room_id == self.id,
+            ClassSession.day == current_day,
+            ClassSession.start_time <= current_time,  # Class has started
+            ClassSession.end_time >= current_time     # Class hasn't ended
+        ).first()
+        
+        if current_session:
+            self.status = 'occupied'
+            # ✅ IMPROVED: Show time range instead of class name
+            self.current_class = f"{current_session.subject} - {current_session.start_time.strftime('%H:%M')}-{current_session.end_time.strftime('%H:%M')}"
+            print(f"[Room Status] {self.name}: OCCUPIED - {self.current_class}")
+        else:
+            self.status = 'available'
+            self.current_class = None
+            print(f"[Room Status] {self.name}: AVAILABLE")
+        
+        # Find next session (next class to happen today)
+        next_session = ClassSession.query.filter(
+            ClassSession.room_id == self.id,
+            ClassSession.day == current_day,
+            ClassSession.start_time > current_time  # Class hasn't started yet
+        ).order_by(ClassSession.start_time).first()
+        
+        if next_session:
+            self.next_class = f"{next_session.subject} - {next_session.start_time.strftime('%H:%M')}"
+            print(f"[Room Status] {self.name}: Next class at {next_session.start_time.strftime('%H:%M')}")
+        else:
+            self.next_class = None
+            print(f"[Room Status] {self.name}: No more classes today")
+
+
+class ClassSession(db.Model):
+    __tablename__ = 'class_sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timetable_id = db.Column(db.Integer, db.ForeignKey('timetables.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    class_name = db.Column(db.String(100), nullable=False)  # e.g., "B.Tech CSE - Sem 4"
+    faculty_name = db.Column(db.String(100))
+    day = db.Column(db.String(20), nullable=False)  # Monday, Tuesday, etc.
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    batch = db.Column(db.String(50))  # Optional: for batch-wise classes
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'subject': self.subject,
+            'class_name': self.class_name,
+            'faculty_name': self.faculty_name,
+            'day': self.day,
+            'start_time': self.start_time.strftime('%H:%M') if self.start_time else None,
+            'end_time': self.end_time.strftime('%H:%M') if self.end_time else None,
+            'room': self.room.name if self.room else None,
+            'room_id': self.room_id,
+            'batch': self.batch
         }
