@@ -135,8 +135,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     INDEX idx_is_read (is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Timetable table
-CREATE TABLE timetables (
+-- Timetables Table
+CREATE TABLE IF NOT EXISTS timetables (
     id INT AUTO_INCREMENT PRIMARY KEY,
     timetable_id VARCHAR(20) UNIQUE NOT NULL,
     uploaded_by INT NOT NULL,
@@ -153,10 +153,10 @@ CREATE TABLE timetables (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (uploaded_by) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ClassSession table
-CREATE TABLE class_sessions (
+-- Class Sessions Table
+CREATE TABLE IF NOT EXISTS class_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     timetable_id INT NOT NULL,
     room_id INT NOT NULL,
@@ -169,9 +169,8 @@ CREATE TABLE class_sessions (
     batch VARCHAR(50),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (timetable_id) REFERENCES timetables(id) ON DELETE CASCADE,
-    FOREIGN KEY (room_id) REFERENCES rooms(id)
-);
-
--- Add new columns to rooms table
-ALTER TABLE rooms ADD COLUMN current_class VARCHAR(100);
-ALTER TABLE rooms ADD COLUMN next_class VARCHAR(100);
+    FOREIGN KEY (room_id) REFERENCES rooms(id),
+    INDEX idx_timetable_id (timetable_id),
+    INDEX idx_room_id (room_id),
+    INDEX idx_day (day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Room, Complaint
+from app.models import User, Room, Complaint, Timetable, ClassSession
 
 app = create_app()
 
@@ -10,10 +10,6 @@ def seed_database():
         
         # Ensure tables exist before seeding
         db.create_all()
-        
-        # Clear existing data (optional)
-        # db.drop_all()
-        # db.create_all()
         
         # Create users
         admin = User(
@@ -83,7 +79,58 @@ def seed_database():
         db.session.add(complaint)
         db.session.commit()
         print("✓ Sample complaint created")
-        
+
+        # Create timetable
+        lab201 = Room.query.filter_by(name='Lab 201').first()
+        lab202 = Room.query.filter_by(name='Lab 202').first()
+        cls105 = Room.query.filter_by(name='Classroom 105').first()
+
+        timetable = Timetable(
+            timetable_id='TT2025001',
+            uploaded_by=admin.id,
+            file_name='timetable_spring_2025-2026.xlsx',
+            file_path='uploads/timetables/timetable_spring_2025-2026.xlsx',
+            file_type='excel',
+            academic_year='2025-2026',
+            semester='Spring',
+            status='active',
+            is_active=True
+        )
+        db.session.add(timetable)
+        db.session.commit()
+        print("✓ Timetable created")
+
+        # Create class sessions
+        sessions_data = [
+            # Monday
+            {'room_id': lab201.id, 'subject': 'Data Structures', 'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Monday',    'start_time': '09:00:00', 'end_time': '10:00:00', 'batch': '3rd Year'},
+            {'room_id': lab202.id, 'subject': 'Web Development',  'class_name': 'CS-3B', 'faculty_name': 'Dr. Smith', 'day': 'Monday',    'start_time': '11:00:00', 'end_time': '12:00:00', 'batch': '3rd Year'},
+            {'room_id': cls105.id, 'subject': 'Mathematics',      'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Monday',    'start_time': '13:00:00', 'end_time': '14:00:00', 'batch': '3rd Year'},
+            # Tuesday
+            {'room_id': lab201.id, 'subject': 'Data Structures', 'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Tuesday',   'start_time': '10:00:00', 'end_time': '11:00:00', 'batch': '3rd Year'},
+            {'room_id': lab202.id, 'subject': 'Web Development',  'class_name': 'CS-3B', 'faculty_name': 'Dr. Smith', 'day': 'Tuesday',   'start_time': '14:00:00', 'end_time': '15:00:00', 'batch': '3rd Year'},
+            {'room_id': cls105.id, 'subject': 'Mathematics',      'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Tuesday',   'start_time': '09:00:00', 'end_time': '10:00:00', 'batch': '3rd Year'},
+            # Wednesday
+            {'room_id': lab201.id, 'subject': 'Data Structures', 'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Wednesday', 'start_time': '11:00:00', 'end_time': '12:00:00', 'batch': '3rd Year'},
+            {'room_id': lab202.id, 'subject': 'Web Development',  'class_name': 'CS-3B', 'faculty_name': 'Dr. Smith', 'day': 'Wednesday', 'start_time': '09:00:00', 'end_time': '10:00:00', 'batch': '3rd Year'},
+            {'room_id': cls105.id, 'subject': 'Mathematics',      'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Wednesday', 'start_time': '13:00:00', 'end_time': '14:00:00', 'batch': '3rd Year'},
+            # Thursday
+            {'room_id': lab201.id, 'subject': 'Data Structures', 'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Thursday',  'start_time': '14:00:00', 'end_time': '15:00:00', 'batch': '3rd Year'},
+            {'room_id': lab202.id, 'subject': 'Web Development',  'class_name': 'CS-3B', 'faculty_name': 'Dr. Smith', 'day': 'Thursday',  'start_time': '11:00:00', 'end_time': '12:00:00', 'batch': '3rd Year'},
+            {'room_id': cls105.id, 'subject': 'Mathematics',      'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Thursday',  'start_time': '09:00:00', 'end_time': '10:00:00', 'batch': '3rd Year'},
+            # Friday
+            {'room_id': lab201.id, 'subject': 'Data Structures', 'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Friday',    'start_time': '13:00:00', 'end_time': '14:00:00', 'batch': '3rd Year'},
+            {'room_id': lab202.id, 'subject': 'Web Development',  'class_name': 'CS-3B', 'faculty_name': 'Dr. Smith', 'day': 'Friday',    'start_time': '09:00:00', 'end_time': '10:00:00', 'batch': '3rd Year'},
+            {'room_id': cls105.id, 'subject': 'Mathematics',      'class_name': 'CS-3A', 'faculty_name': 'Dr. Smith', 'day': 'Friday',    'start_time': '11:00:00', 'end_time': '12:00:00', 'batch': '3rd Year'},
+        ]
+
+        for s in sessions_data:
+            session = ClassSession(timetable_id=timetable.id, **s)
+            db.session.add(session)
+
+        db.session.commit()
+        print("✓ Class sessions created")
+
         print("\n✓ Database seeded successfully!")
         print("\nSample Credentials:")
         print("  Admin   - ADMIN001 / admin123")

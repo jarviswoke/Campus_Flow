@@ -1,7 +1,7 @@
 import React from 'react'
 import { Route, Routes, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
-
+import TimetableManagement from './components/admin/TimetableManagement';
 import Dashboard from    './components/student/Dashboard'
 import ComplaintForm from './components/student/ComplaintForm';
 import VacantRooms from './components/student/VacantRooms';
@@ -54,6 +54,7 @@ const App = () => {
         <Route element={<AdminLayout />}>
           <Route path="/admin"           element={<AdminDashboard />} />
           <Route path="/admin/users"     element={<UserManagement />} />
+          <Route path="/admin/timetables" element={<TimetableManagement />} />
           <Route path="/admin/rooms"     element={<RoomAllocation />} />
           <Route path="/admin/analytics" element={<SystemAnalytics />} />
           <Route path="/admin/audit"     element={<AuditLogs />} />
