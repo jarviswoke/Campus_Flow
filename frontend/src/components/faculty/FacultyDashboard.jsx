@@ -205,7 +205,8 @@ export default function FacultyDashboard({  }) {
               </div>
             ))}
           </div>
-        </div>
+        </div> 
+        
       </div>
     </div>
   );

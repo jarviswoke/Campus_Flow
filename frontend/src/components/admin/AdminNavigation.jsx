@@ -6,8 +6,8 @@ const NAV_ITEMS = [
   { id: 'users', label: 'Users', icon: Users },
   { id: 'timetables',  label: 'Timetables',   icon: CalendarDays },
   {id: 'rooms', label: 'Room Allocation', icon: DoorOpen },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'audit', label: 'Audit Logs', icon: FileText },
+ // { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  //{ id: 'audit', label: 'Audit Logs', icon: FileText },
 ];
 
 export default function AdminNavigation({ activeTab = 'dashboard' }) {

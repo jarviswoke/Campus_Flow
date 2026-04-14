@@ -48,7 +48,7 @@ const App = () => {
         <Route element={<FacultyLayout />}>
           <Route path="/faculty"            element={<FacultyDashboard />} />
           <Route path="/faculty/complaints" element={<FacultyComplaints />} />
-          <Route path="/faculty/timetable"  element={<FacultyTimetable />} />
+          <Route path="/faculty/timetable"  element={<FacultyTimetable />} /> 
         </Route>
 
         <Route element={<AdminLayout />}>
@@ -56,8 +56,8 @@ const App = () => {
           <Route path="/admin/users"     element={<UserManagement />} />
           <Route path="/admin/timetables" element={<TimetableManagement />} />
            <Route path="/admin/rooms"     element={<RoomAllocation />} />
-          <Route path="/admin/analytics" element={<SystemAnalytics />} />
-          <Route path="/admin/audit"     element={<AuditLogs />} />
+      {/*    <Route path="/admin/analytics" element={<SystemAnalytics />} /> */}
+          {/* <Route path="/admin/audit"     element={<AuditLogs />} /> */}
         </Route>
 
       </Routes>
