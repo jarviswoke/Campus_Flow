@@ -44,7 +44,7 @@ export default function AdminDashboard({ onNavigate }) {
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        const response = await fetch(`${BACKEND_URL}/api/complaints/urgent`, { headers });
+        const response = await fetch(`${BACKEND_URL}/api/complaints/`, { headers });
         const data = await response.json();
         console.log(data);
 
@@ -61,7 +61,6 @@ export default function AdminDashboard({ onNavigate }) {
     fetchURGENT();
   }, []);
 
-  // ✅ Added stats logic (based on URGENT)
   const totalUrgent = URGENT.length;
   const criticalCount = URGENT.filter(i => i.priority === "critical").length;
   const highCount = URGENT.filter(i => i.priority === "high").length;
