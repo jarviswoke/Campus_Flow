@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'complaints', label: 'Manage Complaints', icon: ClipboardList },
-  { id: 'timetable', label: 'My Timetable', icon: CalendarDays },
+  { id: 'timetable', label: 'Timetable', icon: CalendarDays },
 ];
 
 export default function FacultyNavigation({ activeTab = 'dashboard' }) {
