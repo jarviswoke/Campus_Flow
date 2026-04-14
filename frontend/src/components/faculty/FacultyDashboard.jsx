@@ -185,7 +185,7 @@ export default function FacultyDashboard({  }) {
           </div>
         </div>
 
-        {/* Today's Schedule */}
+        {/* Today's Schedule 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-4 h-4 text-slate-500" />
@@ -205,7 +205,7 @@ export default function FacultyDashboard({  }) {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
