@@ -212,15 +212,20 @@ export default function FacultyDashboard() {
                 </div>
 
                 {/* Status dropdown */}
-                <select
-                  value={c.status}
-                  onChange={(e) => updateStatus(c.id, e.target.value)}
-                  className="text-xs border rounded-lg px-2"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="open">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                </select>
+                <div className="shrink-0">
+                                  <div className="relative">
+                                    <select
+                                      value={c.status}
+                                      onChange={(e) => updateStatus(c.id, e.target.value)}
+                                      className="appearance-none pr-7 pl-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                                    >
+                                      <option value="pending">Pending</option>
+                                      <option value="open">In Progress</option>
+                                      <option value="resolved">Resolved</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                                  </div>
+                                </div>
               </div>
             </motion.div>
           );
