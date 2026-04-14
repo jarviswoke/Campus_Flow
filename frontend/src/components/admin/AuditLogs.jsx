@@ -65,7 +65,7 @@ export default function AuditLogs() {
             className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {['all', 'user', 'complaint', 'room', 'timetable', 'system'].map((c) => (
+          {['all', 'user', 'complaint', 'timetable', 'system'].map((c) => (
             <button key={c} onClick={() => setCategoryFilter(c)}
               className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
                 categoryFilter === c ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300'

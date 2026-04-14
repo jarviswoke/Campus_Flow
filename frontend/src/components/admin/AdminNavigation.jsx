@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'users', label: 'Users', icon: Users },
-  { id: 'rooms', label: 'Rooms', icon: DoorOpen },
   { id: 'timetables',  label: 'Timetables',   icon: CalendarDays },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'audit', label: 'Audit Logs', icon: FileText },
