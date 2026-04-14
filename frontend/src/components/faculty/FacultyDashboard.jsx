@@ -1,30 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ClipboardList, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, Users } from 'lucide-react';
+import {
+  ClipboardList, CheckCircle, Clock, AlertCircle,
+  Search, User, MapPin, ChevronDown
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
-
-// const STATS = [
-//   { label: 'Total Complaints', value: '47', change: '+8 this week', icon: ClipboardList, color: 'blue' },
-//   { label: 'Resolved', value: '32', change: '68% resolution rate', icon: CheckCircle, color: 'green' },
-//   { label: 'In Progress', value: '12', change: 'Avg 1.5 days', icon: Clock, color: 'amber' },
-//   { label: 'Pending', value: '3', change: 'Needs attention', icon: AlertCircle, color: 'red' },
-// ];
-
-// const URGENT = [
-//   { id: 'CMP024591234', title: 'Air Conditioner not working', student: 'John Doe', location: 'Hostel Block A', priority: 'high', time: '2 hours ago' },
-//   { id: 'CMP024587890', title: 'WiFi connectivity issue', student: 'Alice Smith', location: 'Computer Lab 1', priority: 'high', time: '5 hours ago' },
-//   { id: 'CMP024583456', title: 'Projector not working', student: 'Bob Wilson', location: 'Room 201', priority: 'medium', time: '1 day ago' },
-// ];
-
-
-
-const SCHEDULE = [
-  { time: '9:00 AM', subject: 'Data Structures', room: 'Room 201', students: 45 },
-  { time: '11:00 AM', subject: 'Algorithms', room: 'Lab A', students: 30 },
-  { time: '2:00 PM', subject: 'Database Systems', room: 'Room 101', students: 50 },
-  { time: '4:00 PM', subject: 'Office Hours', room: 'Faculty Room', students: null },
-];
+import { toast } from 'sonner';
 
 const colorMap = {
   blue: 'bg-blue-50 text-blue-600 border-blue-100',
@@ -33,65 +15,53 @@ const colorMap = {
   red: 'bg-red-50 text-red-600 border-red-100',
 };
 
-const priorityCls = { high: 'bg-red-50 text-red-700 border-red-200', medium: 'bg-amber-50 text-amber-700 border-amber-200' };
+const statusConfig = {
+  open: { label: 'In Progress', icon: Clock, cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  resolved: { label: 'Resolved', icon: CheckCircle, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  pending: { label: 'Pending', icon: AlertCircle, cls: 'bg-slate-50 text-slate-600 border-slate-200' },
+};
 
-export default function FacultyDashboard({  }) {
-  
+const priorityCls = {
+  high: 'bg-red-50 text-red-700 border-red-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  low: 'bg-slate-50 text-slate-600 border-slate-200',
+};
+
+export default function FacultyDashboard() {
+  const navigate = useNavigate();
+
   const [facultyName, setFacultyName] = React.useState('');
+  const [complaints, setComplaints] = React.useState([]);
+  const [filtered, setFiltered] = React.useState([]);
+  const [search, setSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [stats, setStats] = React.useState(null);
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
-  
 
-  const navigate=useNavigate();
-
+  // 🔹 Fetch complaints + stats
   React.useEffect(() => {
-    const fetchUrgent = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
 
-        const response = await fetch(`${BACKEND_URL}/api/complaints/urgent`, { headers });
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error('Failed to load complaints:', data);
-          return;
-        }
-
-        setURGENT(data.complaints || []);
-      } catch (error) {
-        console.error('Error fetching complaints:', error);
-      }
+    const fetchComplaints = async () => {
+      const res = await fetch(`${BACKEND_URL}/api/complaints/`, { headers });
+      const data = await res.json();
+      if (res.ok) setComplaints(data.complaints || []);
     };
-    fetchUrgent();
-  }, []);
 
-
-  React.useEffect(() => {
     const fetchStats = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        const response = await fetch(`${BACKEND_URL}/api/complaints/stats`, { headers });
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error('Failed to load stats:', data);
-          return;
-        }
-
-        setStats(data);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
+      const res = await fetch(`${BACKEND_URL}/api/complaints/stats`, { headers });
+      const data = await res.json();
+      if (res.ok) setStats(data);
     };
 
+    fetchComplaints();
     fetchStats();
   }, []);
 
+  // 🔹 Decode name
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -100,113 +70,163 @@ export default function FacultyDashboard({  }) {
     }
   }, []);
 
-  const [URGENT, setURGENT] = React.useState([]);
-  const [stats, setStats] = React.useState(null);
+  // 🔹 Filtering logic (same as manage page)
+  React.useEffect(() => {
+    const q = search.toLowerCase();
+
+    const result = complaints.filter((c) => {
+      return (
+        (c.title?.toLowerCase().includes(q) ||
+          String(c.id).includes(q) ||
+          c.student?.toLowerCase().includes(q)) &&
+        (statusFilter === 'all' || c.status === statusFilter)
+      );
+    });
+
+    setFiltered(result);
+  }, [complaints, search, statusFilter]);
+
+  // 🔹 Update status (same as manage page)
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const res = await fetch(
+        `${BACKEND_URL}/api/complaints/${id}/status`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to update');
+        return;
+      }
+
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: newStatus } : c
+        )
+      );
+
+      toast.success('Status updated');
+    } catch (err) {
+      toast.error('Something went wrong');
+    }
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Faculty Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Welcome back, {facultyName}</p>
-        </div>
-        <button onClick={() => navigate('/faculty/complaints')}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
-          <ClipboardList className="w-4 h-4" /> View All Complaints
-        </button>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Faculty Dashboard</h1>
+        <p className="text-slate-500 text-sm mt-0.5">Welcome back, {facultyName}</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats && [
-          {
-            label: 'Total Complaints',
-            value: stats.total,
-            icon: ClipboardList,
-            color: 'blue'
-          },
-          {
-            label: 'Resolved',
-            value: stats.resolved,
-            icon: CheckCircle,
-            color: 'green'
-          },
-          {
-            label: 'In Progress',
-            value: stats.open,
-            icon: Clock,
-            color: 'amber'
-          },
-          {
-            label: 'Pending',
-            value: stats.pending,
-            icon: AlertCircle,
-            color: 'red'
-          }
+          { label: 'Total Complaints', value: stats.total, icon: ClipboardList, color: 'blue' },
+          { label: 'Resolved', value: stats.resolved, icon: CheckCircle, color: 'green' },
+          { label: 'In Progress', value: stats.open, icon: Clock, color: 'amber' },
+          { label: 'Pending', value: stats.pending, icon: AlertCircle, color: 'red' }
         ].map((s, i) => {
           const Icon = s.icon;
           return (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <motion.div key={s.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5"
+            >
               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${colorMap[s.color]}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <p className="text-3xl font-bold text-slate-900 mb-0.5">{s.value}</p>
+              <p className="text-3xl font-bold text-slate-900">{s.value}</p>
               <p className="text-xs text-slate-500">{s.label}</p>
-              <p className="text-xs text-slate-400 mt-1">{s.change}</p>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Body */}
-      <div className="grid lg:grid-cols-3 gap-5">
-        {/* Urgent Complaints */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-slate-900">Urgent Complaints</h2>
-            <button onClick={() => navigate('/faculty/complaints')}
-              className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700">
-              View all <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="space-y-3">
-            {URGENT.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${c.priority === 'high' ? 'bg-red-500' : 'bg-amber-400'}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{c.title}</p>
-                  <p className="text-xs text-slate-400">{c.student} · {c.location} · {c.time}</p>
-                </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${priorityCls[c.priority]}`}>
-                  {c.priority}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* 🔍 Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 " />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search complaints…"
+            className="w-full h-10 pl-9 pr-4 rounded-xl border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition"
+          />
         </div>
 
-        {/* Today's Schedule 
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-4 h-4 text-slate-500" />
-            <h2 className="text-base font-semibold text-slate-900">Today's Schedule</h2>
-          </div>
-          <div className="space-y-3">
-            {SCHEDULE.map((s) => (
-              <div key={s.time} className="flex gap-3">
-                <div className="text-xs font-mono text-slate-400 w-16 shrink-0 pt-0.5">{s.time}</div>
-                <div className="flex-1 p-2.5 rounded-xl bg-indigo-50 border border-indigo-100">
-                  <p className="text-sm font-semibold text-indigo-900">{s.subject}</p>
-                  <p className="text-xs text-indigo-600 mt-0.5 flex items-center gap-1">
-                    {s.room}
-                    {s.students && <><span className="text-indigo-300">·</span><Users className="w-3 h-3" />{s.students}</>}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
+        <div className="flex gap-2">
+          {['all', 'pending', 'open', 'resolved'].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-2 rounded-xl text-xs border ${
+                statusFilter === s ? 'bg-indigo-600 text-white  border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+              }`}
+            >
+              {s === 'all' ? 'All' : s}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* 🧾 Complaints List (SAME AS MANAGE PAGE) */}
+      <div className="space-y-3">
+        {filtered.map((c) => {
+          const sc = statusConfig[c.status] || statusConfig['pending'];
+          const StatusIcon = sc.icon;
+
+          return (
+            <motion.div key={c.id}
+              className="bg-white rounded-2xl border p-4"
+            >
+              <div className="flex gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${sc.cls}`}>
+                  <StatusIcon className="w-4 h-4" />
+                </div>
+
+                <div className="flex-1">
+                  <p className="font-semibold">{c.title}</p>
+                  <p className="text-xs text-slate-400">{c.id} · {c.category}</p>
+
+                  <div className="flex gap-3 text-xs text-slate-500 mt-1">
+                    <span><User className="w-3 h-3 inline" /> {c.student}</span>
+                    <span><MapPin className="w-3 h-3 inline" /> {c.location}</span>
+                  </div>
+
+                  <p className="text-sm mt-2">{c.description}</p>
+                </div>
+
+                {/* Status dropdown */}
+                <select
+                  value={c.status}
+                  onChange={(e) => updateStatus(c.id, e.target.value)}
+                  className="text-xs border rounded-lg px-2"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="open">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
     </div>
   );
 }
