@@ -80,13 +80,30 @@ def process_timetable_async(timetable_id):
             for session_data in sessions:
                 # Find or create room
                 room = Room.query.filter_by(name=session_data.get('room')).first()
+                room_name = (session_data.get('room') or "Unknown").strip()
+
                 if not room:
                     # Create new room if it doesn't exist
+                    if room_name.startswith(("9001", "9101", "8001", "8101", "8201")):
+                        room_type = "Classroom"
+                        capacity = 120
+
+                    elif room_name.startswith(("9011", "9012", "8011", "8012", "8111", "8112")):
+                        room_type = "classroom"
+                        capacity = 80
+
+                    elif room_name.endswith("A") or room_name.endswith("B") or room_name.endswith("LAB"):
+                        room_type = "lab"
+                        capacity = 60
+
+                    else:
+                        room_type = "classroom"
+                        capacity = 60
                     room = Room(
                         name=session_data.get('room', 'Unknown'),
                         building='Main',
-                        room_type='classroom',
-                        capacity=30,
+                        room_type=room_type,
+                        capacity=capacity,
                         status='available'
                     )
                     db.session.add(room)
