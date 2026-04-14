@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Home, DoorOpen, MessageSquare, List, User, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -14,6 +14,7 @@ export default function Navigation({ activeTab = 'dashboard' }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+  
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -69,7 +70,7 @@ export default function Navigation({ activeTab = 'dashboard' }) {
         {/* Nav links */}
         <div className="flex items-center gap-0.5 overflow-x-auto">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-            const active = id === activeTab;
+            const active  = location.pathname === `/${id}`;
             return (
               <button
                 key={id}

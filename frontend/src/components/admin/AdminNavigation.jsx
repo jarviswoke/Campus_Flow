@@ -1,5 +1,5 @@
 import {LayoutDashboard, Users, DoorOpen, BarChart3, FileText, Shield, LogOut, CalendarDays } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
 
 export default function AdminNavigation({ activeTab = 'dashboard' }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.clear();
@@ -36,7 +37,8 @@ export default function AdminNavigation({ activeTab = 'dashboard' }) {
 
         <div className="flex items-center gap-0.5 overflow-x-auto">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-            const active = id === activeTab;
+            const path = id === 'dashboard' ? '/admin' : `/admin/${id}`;
+            const active = location.pathname === path;
             return (
               <button key={id}
                 onClick={() => navigate(id === 'dashboard' ? '/admin' : `/admin/${id}`)}

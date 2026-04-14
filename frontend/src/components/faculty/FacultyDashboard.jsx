@@ -184,7 +184,7 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
-      {/* 🧾 Complaints List (SAME AS MANAGE PAGE) */}
+      {/* Complaints List (SAME AS MANAGE PAGE) */}
       <div className="space-y-3">
         {filtered.map((c) => {
           const sc = statusConfig[c.status] || statusConfig['pending'];

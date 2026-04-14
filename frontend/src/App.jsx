@@ -47,7 +47,7 @@ const App = () => {
 
         <Route element={<FacultyLayout />}>
           <Route path="/faculty"            element={<FacultyDashboard />} />
-          <Route path="/faculty/complaints" element={<FacultyComplaints />} />
+           {/* <Route path="/faculty/complaints" element={<FacultyComplaints />} /> */}
           <Route path="/faculty/timetable"  element={<FacultyTimetable />} /> 
         </Route>
 

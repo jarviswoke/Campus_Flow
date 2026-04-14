@@ -1,16 +1,17 @@
 import { LayoutDashboard, ClipboardList, CalendarDays, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import React from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'complaints', label: 'Manage Complaints', icon: ClipboardList },
+  //{ id: 'complaints', label: 'Manage Complaints', icon: ClipboardList },
   { id: 'timetable', label: 'Timetable', icon: CalendarDays },
 ];
 
 export default function FacultyNavigation({ activeTab = 'dashboard' }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [facultyName, setFacultyName] = React.useState('');
   const [facultyDepartment, setFacultyDepartment] = React.useState('');
@@ -46,7 +47,11 @@ export default function FacultyNavigation({ activeTab = 'dashboard' }) {
 
         <div className="flex items-center gap-0.5">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-            const active = id === activeTab;
+            const path = id === 'dashboard' ? '/faculty' : `/faculty/${id}`;
+            const active =
+      id === 'dashboard'
+        ? location.pathname === '/faculty'
+        : location.pathname === path;
             return (
               <button key={id}
                 onClick={() => navigate(id === 'dashboard' ? '/faculty' : `/faculty/${id}`)}
