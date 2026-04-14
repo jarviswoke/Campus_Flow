@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'timetables',  label: 'Timetables',   icon: CalendarDays },
+  {id: 'rooms', label: 'Room Allocation', icon: DoorOpen },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'audit', label: 'Audit Logs', icon: FileText },
 ];

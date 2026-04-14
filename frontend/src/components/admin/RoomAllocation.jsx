@@ -65,12 +65,12 @@ export default function RoomAllocation() {
           <h1 className="text-xl font-bold text-slate-900">Room Allocation</h1>
           <p className="text-slate-500 text-sm mt-0.5">Manage room assignments and availability.</p>
         </div>
-        <button
+       {/* <button
           onClick={() => toast.info('Room allocation form coming soon')}
           className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
         >
           <Plus className="w-4 h-4" /> Allocate Room
-        </button>
+        </button> */}
       </div>
 
       {/* Summary chips */}
@@ -184,14 +184,14 @@ export default function RoomAllocation() {
                   </div>
                 )}
 
-                {room.status === 'available' && (
+             {/*   {room.status === 'available' && (
                   <button
                     onClick={() => toast.success(`Booking ${room.name}…`)}
                     className="w-full mt-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
                   >
                     <CheckCircle className="w-3.5 h-3.5" /> Allocate Room
                   </button>
-                )}
+                )} */}
               </motion.div>
             );
           })}
