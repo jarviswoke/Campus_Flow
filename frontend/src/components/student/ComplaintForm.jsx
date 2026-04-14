@@ -44,7 +44,6 @@ export default function ComplaintForm({ onSubmit }) {
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
 
-  // Helper function for authenticated API calls
   const makeAuthenticatedRequest = async (url, options = {}) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -63,7 +62,6 @@ export default function ComplaintForm({ onSubmit }) {
     });
   };
 
-  // Fetch existing complaints on component mount
   useEffect(() => {
     const fetchExistingComplaints = async () => {
       try {
@@ -80,7 +78,6 @@ export default function ComplaintForm({ onSubmit }) {
         setExistingComplaints(data.complaints || []);
       } catch (error) {
         if (error.message === 'No authentication token found') {
-          // User not logged in, don't fetch
           return;
         }
         console.error('Error fetching complaints:', error);
@@ -109,7 +106,7 @@ export default function ComplaintForm({ onSubmit }) {
           category: data.category,
           title: data.title,
           description: data.description,
-          priority: 'medium', // Default priority
+          priority: 'medium',
         }),
       });
 
@@ -120,7 +117,6 @@ export default function ComplaintForm({ onSubmit }) {
         return;
       }
 
-      // Success - navigate to success page
       navigate('/success', {
         state: {
           complaint: result.complaint,
