@@ -111,7 +111,7 @@ Users are redirected to their respective dashboards upon successful login.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/campus-flow.git
+git clone https://github.com/jarviswoke/campus-flow.git
 cd campus-flow
 ```
 
